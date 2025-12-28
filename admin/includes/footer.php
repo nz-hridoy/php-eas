@@ -87,8 +87,44 @@
     // Close dropdown when clicking outside
     document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('userDropdown');
-        if (!dropdown.contains(event.target)) {
+        if (dropdown && !dropdown.contains(event.target)) {
             dropdown.classList.remove('show');
+        }
+    });
+
+    // Toggle submenu
+    function toggleSubmenu(element) {
+        const submenu = element.nextElementSibling;
+        if (submenu && submenu.classList.contains('sidebar-submenu')) {
+            const isShowing = submenu.classList.contains('show');
+            submenu.classList.toggle('show');
+            element.classList.toggle('submenu-open');
+            // Update arrow icon
+            const arrow = element.querySelector('.submenu-arrow');
+            if (arrow) {
+                if (isShowing) {
+                    arrow.classList.remove('bi-chevron-up');
+                    arrow.classList.add('bi-chevron-down');
+                } else {
+                    arrow.classList.remove('bi-chevron-down');
+                    arrow.classList.add('bi-chevron-up');
+                }
+            }
+        }
+    }
+    
+    // Auto-expand submenu if on reports page
+    document.addEventListener('DOMContentLoaded', function() {
+        const reportsMenuItem = document.querySelector('.sidebar-menu-item.active');
+        if (reportsMenuItem && reportsMenuItem.nextElementSibling && reportsMenuItem.nextElementSibling.classList.contains('sidebar-submenu')) {
+            const submenu = reportsMenuItem.nextElementSibling;
+            submenu.classList.add('show');
+            reportsMenuItem.classList.add('submenu-open');
+            const arrow = reportsMenuItem.querySelector('.submenu-arrow');
+            if (arrow) {
+                arrow.classList.remove('bi-chevron-down');
+                arrow.classList.add('bi-chevron-up');
+            }
         }
     });
 </script>
