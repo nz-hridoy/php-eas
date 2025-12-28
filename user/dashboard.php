@@ -7,8 +7,8 @@ if (!isLoggedIn()) {
     exit();
 }
 
-// Ensure only regular users can access (admin should not access user dashboard)
-if ($_SESSION['role'] !== 'user') {
+// Ensure only employees can access (admin and manager should not access user dashboard)
+if ($_SESSION['role'] !== 'employee') {
     header('Location: ../index.php');
     exit();
 }

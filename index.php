@@ -5,11 +5,11 @@ require_once 'config/database.php';
 if (isLoggedIn()) {
     $role = $_SESSION['role'] ?? '';
     
-    // Redirect based on role (admin and user only)
-    if ($role === 'admin') {
+    // Redirect based on role
+    if ($role === 'admin' || $role === 'manager') {
         header('Location: admin/dashboard.php');
         exit();
-    } elseif ($role === 'user') {
+    } elseif ($role === 'employee') {
         header('Location: user/dashboard.php');
         exit();
     } else {
@@ -33,17 +33,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $stmt->get_result();
 
         if ($user = $result->fetch_assoc()) {
-            // For demo purposes, accept plain password or verify hash
-            if ($password === 'admin123' || $password === 'user123' || $password === 'password' || password_verify($password, $user['password'])) {
+            // Verify password using password_verify (bcrypt hash)
+            if (password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['full_name'] = $user['name'];
 
-                // Redirect based on role (admin and user only)
-                if ($user['role'] === 'admin') {
+                // Update last login time
+                $updateStmt = $conn->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?");
+                $updateStmt->bind_param("i", $user['id']);
+                $updateStmt->execute();
+                $updateStmt->close();
+
+                // Redirect based on role
+                if ($user['role'] === 'admin' || $user['role'] === 'manager') {
                     header('Location: admin/dashboard.php');
-                } elseif ($user['role'] === 'user') {
+                } elseif ($user['role'] === 'employee') {
                     header('Location: user/dashboard.php');
                 } else {
                     // Fallback redirect to user dashboard
@@ -67,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Final check before rendering HTML - ensure no logged-in user sees the login page
 if (isLoggedIn()) {
     $role = $_SESSION['role'] ?? '';
-    if ($role === 'admin') {
+    if ($role === 'admin' || $role === 'manager') {
         header('Location: admin/dashboard.php');
     } else {
         header('Location: user/dashboard.php');
@@ -114,8 +120,8 @@ if (isLoggedIn()) {
                 <div class="mt-4 text-center">
                     <p class="text-muted small mb-2">Demo Credentials:</p>
                     <div class="d-flex gap-2 justify-content-center">
-                        <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" style="min-width: 90px;" onclick="fillCredentials('admin@example.com', 'password')">Admin</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" style="min-width: 90px;" onclick="fillCredentials('user@example.com', 'password')">User</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" style="min-width: 90px;" onclick="fillCredentials('admin@example.com', '12345678')">Admin</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" style="min-width: 90px;" onclick="fillCredentials('user@example.com', '12345678')">Employee</button>
                     </div>
                 </div>
             </div>
