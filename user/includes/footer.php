@@ -3,6 +3,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script src="../assets/js/autocomplete-off.js"></script>
 <script>
     function toggleUserDropdown() {
@@ -91,6 +92,154 @@
             dropdown.classList.remove('show');
         }
     });
+
+    // Check In function
+    function checkIn() {
+        const btn = document.getElementById('checkInBtn');
+        const originalText = btn.innerHTML;
+        
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        const formData = new FormData();
+        formData.append('action', 'check_in');
+        
+        fetch('../api/attendance.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2D3748',
+                    background: '#2D3748',
+                    color: '#FFFFFF',
+                    customClass: {
+                        popup: 'swal2-popup',
+                        title: 'swal2-title',
+                        content: 'swal2-content'
+                    }
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: data.type === 'warning' ? 'warning' : 'error',
+                    title: data.type === 'warning' ? 'Warning' : 'Error',
+                    text: data.message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2D3748',
+                    background: '#2D3748',
+                    color: '#FFFFFF',
+                    customClass: {
+                        popup: 'swal2-popup',
+                        title: 'swal2-title',
+                        content: 'swal2-content'
+                    }
+                });
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2D3748',
+                background: '#2D3748',
+                color: '#FFFFFF',
+                customClass: {
+                    popup: 'swal2-popup',
+                    title: 'swal2-title',
+                    content: 'swal2-content'
+                }
+            });
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+
+    // Check Out function
+    function checkOut() {
+        const btn = document.getElementById('checkOutBtn');
+        const originalText = btn.innerHTML;
+        
+        // Disable button and show loading
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        const formData = new FormData();
+        formData.append('action', 'check_out');
+        
+        fetch('../api/attendance.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2D3748',
+                    background: '#2D3748',
+                    color: '#FFFFFF',
+                    customClass: {
+                        popup: 'swal2-popup',
+                        title: 'swal2-title',
+                        content: 'swal2-content'
+                    }
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: data.type === 'warning' ? 'warning' : 'error',
+                    title: data.type === 'warning' ? 'Warning' : 'Error',
+                    text: data.message,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2D3748',
+                    background: '#2D3748',
+                    color: '#FFFFFF',
+                    customClass: {
+                        popup: 'swal2-popup',
+                        title: 'swal2-title',
+                        content: 'swal2-content'
+                    }
+                });
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred. Please try again.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2D3748',
+                background: '#2D3748',
+                color: '#FFFFFF',
+                customClass: {
+                    popup: 'swal2-popup',
+                    title: 'swal2-title',
+                    content: 'swal2-content'
+                }
+            });
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
 </script>
 </body>
 </html>

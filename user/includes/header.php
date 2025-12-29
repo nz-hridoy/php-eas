@@ -7,7 +7,7 @@
         <div class="user-dropdown-toggle" onclick="toggleUserDropdown()">
             <div class="user-avatar">
                 <?php 
-                $name = $_SESSION['full_name'] ?? 'User';
+                $name = $_SESSION['name'] ?? $_SESSION['full_name'] ?? 'User';
                 echo strtoupper(substr($name, 0, 1)); 
                 ?>
             </div>

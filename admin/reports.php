@@ -160,17 +160,25 @@ include 'includes/head.php';
                             <p class="text-muted">View and analyze attendance data</p>
                         </div>
                         <!-- Date/Month Filter -->
-                        <?php if ($report_type === 'daily'): ?>
-                            <form method="GET" class="d-inline">
-                                <input type="hidden" name="type" value="daily">
-                                <input type="date" name="date" class="form-control" value="<?php echo isset($_GET['date']) ? htmlspecialchars($_GET['date']) : date('Y-m-d'); ?>" onchange="this.form.submit()">
-                            </form>
-                        <?php else: ?>
-                            <form method="GET" class="d-inline">
-                                <input type="hidden" name="type" value="<?php echo $report_type; ?>">
-                                <input type="month" name="month" class="form-control" value="<?php echo isset($_GET['month']) ? htmlspecialchars($_GET['month']) : date('Y-m'); ?>" onchange="this.form.submit()">
-                            </form>
-                        <?php endif; ?>
+                        <div class="d-flex align-items-center gap-2">
+                            <?php if ($report_type === 'daily'): ?>
+                                <form method="GET" class="d-inline">
+                                    <input type="hidden" name="type" value="daily">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                                        <input type="date" name="date" class="form-control" value="<?php echo isset($_GET['date']) ? htmlspecialchars($_GET['date']) : date('Y-m-d'); ?>" onchange="this.form.submit()">
+                                    </div>
+                                </form>
+                            <?php else: ?>
+                                <form method="GET" class="d-inline">
+                                    <input type="hidden" name="type" value="<?php echo $report_type; ?>">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-calendar-month"></i></span>
+                                        <input type="month" name="month" class="form-control" value="<?php echo isset($_GET['month']) ? htmlspecialchars($_GET['month']) : date('Y-m'); ?>" onchange="this.form.submit()">
+                                    </div>
+                                </form>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -178,35 +186,47 @@ include 'includes/head.php';
             <!-- Daily Report -->
             <?php if ($report_type === 'daily'): ?>
                 <!-- Statistics Cards -->
-                <div class="row mb-4">
+                <div class="row mb-4 g-3">
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-muted">Total</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-people fs-1 text-muted"></i>
+                                </div>
+                                <h5 class="text-muted mb-1 small">Total Employees</h5>
                                 <h2 class="mb-0"><?php echo $total_employees; ?></h2>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-success">Present</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                                </div>
+                                <h5 class="text-success mb-1 small">Present</h5>
                                 <h2 class="mb-0 text-success"><?php echo $present_count; ?></h2>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-warning">Late</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-clock-history fs-1 text-warning"></i>
+                                </div>
+                                <h5 class="text-warning mb-1 small">Late</h5>
                                 <h2 class="mb-0 text-warning"><?php echo $late_count; ?></h2>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-danger">Absent</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-x-circle fs-1 text-danger"></i>
+                                </div>
+                                <h5 class="text-danger mb-1 small">Absent</h5>
                                 <h2 class="mb-0 text-danger"><?php echo $absent_count; ?></h2>
                             </div>
                         </div>
@@ -214,7 +234,7 @@ include 'includes/head.php';
                 </div>
 
                 <!-- Attendance Table -->
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -290,35 +310,47 @@ include 'includes/head.php';
             <!-- Monthly Report -->
             <?php elseif ($report_type === 'monthly'): ?>
                 <!-- Statistics Cards -->
-                <div class="row mb-4">
+                <div class="row mb-4 g-3">
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-muted">Total Employees</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-people fs-1 text-muted"></i>
+                                </div>
+                                <h5 class="text-muted mb-1 small">Total Employees</h5>
                                 <h2 class="mb-0"><?php echo $total_employees; ?></h2>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-success">Total Present</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                                </div>
+                                <h5 class="text-success mb-1 small">Total Present</h5>
                                 <h2 class="mb-0 text-success"><?php echo $total_present; ?></h2>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-warning">Total Late</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-clock-history fs-1 text-warning"></i>
+                                </div>
+                                <h5 class="text-warning mb-1 small">Total Late</h5>
                                 <h2 class="mb-0 text-warning"><?php echo $total_late; ?></h2>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <h5 class="card-title text-danger">Total Absent</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-2">
+                                    <i class="bi bi-x-circle fs-1 text-danger"></i>
+                                </div>
+                                <h5 class="text-danger mb-1 small">Total Absent</h5>
                                 <h2 class="mb-0 text-danger"><?php echo $total_absent; ?></h2>
                             </div>
                         </div>
@@ -326,7 +358,7 @@ include 'includes/head.php';
                 </div>
 
                 <!-- Summary Table -->
-                <div class="card">
+                <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -382,9 +414,10 @@ include 'includes/head.php';
                 <!-- Late Arrivals -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Late Arrivals (<?php echo count($late_records); ?>)</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-header d-flex align-items-center">
+                                <i class="bi bi-clock-history me-2 text-warning"></i>
+                                <h6 class="mb-0">Late Arrivals <span class="badge bg-warning"><?php echo count($late_records); ?></span></h6>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -431,9 +464,10 @@ include 'includes/head.php';
                 <!-- Early Departures -->
                 <div class="row">
                     <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0"><i class="bi bi-clock"></i> Early Departures (<?php echo count($early_records); ?>)</h5>
+                        <div class="card shadow-sm">
+                            <div class="card-header d-flex align-items-center">
+                                <i class="bi bi-clock me-2 text-info"></i>
+                                <h6 class="mb-0">Early Departures <span class="badge bg-info"><?php echo count($early_records); ?></span></h6>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">

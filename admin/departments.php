@@ -7,55 +7,6 @@ if (!isLoggedIn() || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'ma
     exit();
 }
 
-$message = '';
-$message_type = '';
-
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $conn = getDBConnection();
-    $action = $_POST['action'] ?? '';
-    
-    if ($action === 'create') {
-        $name = trim($_POST['name'] ?? '');
-        $stmt = $conn->prepare("INSERT INTO departments (name) VALUES (?)");
-        $stmt->bind_param("s", $name);
-        if ($stmt->execute()) {
-            $message = 'Department created successfully!';
-            $message_type = 'success';
-        } else {
-            $message = 'Error creating department: ' . $conn->error;
-            $message_type = 'danger';
-        }
-        $stmt->close();
-    } elseif ($action === 'update') {
-        $id = (int)$_POST['id'];
-        $name = trim($_POST['name'] ?? '');
-        $stmt = $conn->prepare("UPDATE departments SET name = ? WHERE id = ?");
-        $stmt->bind_param("si", $name, $id);
-        if ($stmt->execute()) {
-            $message = 'Department updated successfully!';
-            $message_type = 'success';
-        } else {
-            $message = 'Error updating department: ' . $conn->error;
-            $message_type = 'danger';
-        }
-        $stmt->close();
-    } elseif ($action === 'delete') {
-        $id = (int)$_POST['id'];
-        $stmt = $conn->prepare("DELETE FROM departments WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        if ($stmt->execute()) {
-            $message = 'Department deleted successfully!';
-            $message_type = 'success';
-        } else {
-            $message = 'Error deleting department: ' . $conn->error;
-            $message_type = 'danger';
-        }
-        $stmt->close();
-    }
-    $conn->close();
-}
-
 // Get all departments
 $conn = getDBConnection();
 $departments = $conn->query("SELECT * FROM departments ORDER BY name")->fetch_all(MYSQLI_ASSOC);
@@ -86,12 +37,6 @@ include 'includes/head.php';
                 </div>
             </div>
 
-            <?php if ($message): ?>
-                <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
-                    <?php echo htmlspecialchars($message); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
 
             <div class="card">
                 <div class="card-body">
@@ -102,7 +47,7 @@ include 'includes/head.php';
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Created At</th>
-                                    <th>Actions</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -116,17 +61,13 @@ include 'includes/head.php';
                                             <td><?php echo $dept['id']; ?></td>
                                             <td><?php echo htmlspecialchars($dept['name']); ?></td>
                                             <td><?php echo date('M d, Y', strtotime($dept['created_at'])); ?></td>
-                                            <td>
+                                            <td class="text-end">
                                                 <button type="button" class="btn btn-sm btn-primary" onclick="editDepartment(<?php echo htmlspecialchars(json_encode($dept)); ?>)">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
-                                                <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this department?');">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="id" value="<?php echo $dept['id']; ?>">
-                                                    <button type="submit" class="btn btn-sm btn-danger">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteDepartment(<?php echo $dept['id']; ?>)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -140,10 +81,10 @@ include 'includes/head.php';
     </main>
 
     <!-- Department Modal -->
-    <div class="modal fade" id="departmentModal" tabindex="-1">
+    <div class="modal fade" id="departmentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form method="POST">
+                <form id="departmentForm">
                     <div class="modal-header">
                         <h5 class="modal-title">Add Department</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -154,7 +95,8 @@ include 'includes/head.php';
                         
                         <div class="mb-3">
                             <label class="form-label">Department Name</label>
-                            <input type="text" class="form-control" name="name" id="departmentName" required>
+                            <input type="text" class="form-control" name="name" id="departmentName" placeholder="e.g., Information Technology">
+                            <div class="invalid-feedback"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -167,11 +109,47 @@ include 'includes/head.php';
     </div>
 
     <script>
+        function clearValidation() {
+            const form = document.getElementById('departmentForm');
+            const inputs = form.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+                const feedback = input.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = '';
+                }
+            });
+        }
+
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            field.classList.add('is-invalid');
+            const feedback = field.nextElementSibling;
+            if (feedback && feedback.classList.contains('invalid-feedback')) {
+                feedback.textContent = message;
+            }
+        }
+
+        function validateForm() {
+            clearValidation();
+            let isValid = true;
+
+            // Department Name
+            const name = document.getElementById('departmentName').value.trim();
+            if (!name) {
+                showFieldError('departmentName', 'Department name is required');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
         function resetForm() {
             document.getElementById('departmentAction').value = 'create';
             document.getElementById('departmentId').value = '';
             document.getElementById('departmentModal').querySelector('.modal-title').textContent = 'Add Department';
-            document.getElementById('departmentModal').querySelector('form').reset();
+            document.getElementById('departmentForm').reset();
+            clearValidation();
         }
         
         function editDepartment(dept) {
@@ -179,10 +157,169 @@ include 'includes/head.php';
             document.getElementById('departmentId').value = dept.id;
             document.getElementById('departmentName').value = dept.name || '';
             document.getElementById('departmentModal').querySelector('.modal-title').textContent = 'Edit Department';
+            clearValidation();
             
             const modal = new bootstrap.Modal(document.getElementById('departmentModal'));
             modal.show();
         }
+
+        function deleteDepartment(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                width: 400,
+                customClass: {
+                    popup: 'small-swal'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('id', id);
+
+                    fetch('../api/departments.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                width: 400,
+                                customClass: {
+                                    popup: 'small-swal'
+                                }
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message,
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                width: 400,
+                                customClass: {
+                                    popup: 'small-swal'
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'An error occurred while deleting the department.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            width: 400,
+                            customClass: {
+                                popup: 'small-swal'
+                            }
+                        });
+                        console.error('Error:', error);
+                    });
+                }
+            });
+        }
+
+        // Handle form submission
+        document.getElementById('departmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            if (!validateForm()) {
+                // Scroll to first error
+                const firstError = document.querySelector('.is-invalid');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const action = formData.get('action');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+            fetch('../api/departments.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+                
+                if (data.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('departmentModal'));
+                    modal.hide();
+                    
+                    const actionText = action === 'create' ? 'created' : 'updated';
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        width: 400,
+                        customClass: {
+                            popup: 'small-swal'
+                        }
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        width: 400,
+                        customClass: {
+                            popup: 'small-swal'
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An error occurred while saving the department.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    width: 400,
+                    customClass: {
+                        popup: 'small-swal'
+                    }
+                });
+                console.error('Error:', error);
+            });
+        });
+
+        // Clear validation on input
+        document.getElementById('departmentForm').addEventListener('input', function(e) {
+            if (e.target.classList.contains('is-invalid')) {
+                e.target.classList.remove('is-invalid');
+                const feedback = e.target.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = '';
+                }
+            }
+        });
     </script>
 
     <?php include 'includes/footer.php'; ?>

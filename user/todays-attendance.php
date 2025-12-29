@@ -15,107 +15,6 @@ if ($_SESSION['role'] !== 'employee') {
 
 $user_id = $_SESSION['user_id'];
 $today = date('Y-m-d');
-$message = '';
-$message_type = '';
-
-// Handle check-in/check-out
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    $conn = getDBConnection();
-    
-    // Get user's shift
-    $userStmt = $conn->prepare("SELECT shift_id, department_id FROM users WHERE id = ?");
-    $userStmt->bind_param("i", $user_id);
-    $userStmt->execute();
-    $userResult = $userStmt->get_result();
-    $user = $userResult->fetch_assoc();
-    $userStmt->close();
-    
-    if (!$user || !$user['shift_id']) {
-        $message = 'Your account is not properly configured. Please contact administrator.';
-        $message_type = 'danger';
-    } else {
-        // Check if attendance record exists for today
-        $checkStmt = $conn->prepare("SELECT * FROM attendance_records WHERE user_id = ? AND att_date = ?");
-        $checkStmt->bind_param("is", $user_id, $today);
-        $checkStmt->execute();
-        $attendance = $checkStmt->get_result()->fetch_assoc();
-        $checkStmt->close();
-        
-        $current_time = date('Y-m-d H:i:s');
-        $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
-        
-        if ($action === 'check_in') {
-            if ($attendance && $attendance['check_in_time']) {
-                $message = 'You have already checked in today.';
-                $message_type = 'warning';
-            } else {
-                // Get shift details for late calculation
-                $shiftStmt = $conn->prepare("SELECT start_time, grace_minutes FROM shifts WHERE id = ?");
-                $shiftStmt->bind_param("i", $user['shift_id']);
-                $shiftStmt->execute();
-                $shift = $shiftStmt->get_result()->fetch_assoc();
-                $shiftStmt->close();
-                
-                $shift_start = strtotime($today . ' ' . $shift['start_time']);
-                $check_in_time = strtotime($current_time);
-                $late_minutes = max(0, floor(($check_in_time - $shift_start) / 60) - $shift['grace_minutes']);
-                
-                if ($attendance) {
-                    // Update existing record
-                    $updateStmt = $conn->prepare("UPDATE attendance_records SET check_in_time = ?, check_in_ip = ?, late_minutes = ?, status = ? WHERE id = ?");
-                    $status = $late_minutes > 0 ? 'late' : 'present';
-                    $updateStmt->bind_param("ssisi", $current_time, $ip_address, $late_minutes, $status, $attendance['id']);
-                    $updateStmt->execute();
-                    $updateStmt->close();
-                } else {
-                    // Create new record
-                    $insertStmt = $conn->prepare("INSERT INTO attendance_records (user_id, att_date, shift_id, check_in_time, check_in_ip, late_minutes, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                    $status = $late_minutes > 0 ? 'late' : 'present';
-                    $insertStmt->bind_param("isissis", $user_id, $today, $user['shift_id'], $current_time, $ip_address, $late_minutes, $status);
-                    $insertStmt->execute();
-                    $insertStmt->close();
-                }
-                
-                $message = 'Check-in successful!';
-                $message_type = 'success';
-            }
-        } elseif ($action === 'check_out') {
-            if (!$attendance || !$attendance['check_in_time']) {
-                $message = 'Please check in first.';
-                $message_type = 'warning';
-            } elseif ($attendance['check_out_time']) {
-                $message = 'You have already checked out today.';
-                $message_type = 'warning';
-            } else {
-                // Get shift details for early calculation
-                $shiftStmt = $conn->prepare("SELECT end_time FROM shifts WHERE id = ?");
-                $shiftStmt->bind_param("i", $user['shift_id']);
-                $shiftStmt->execute();
-                $shift = $shiftStmt->get_result()->fetch_assoc();
-                $shiftStmt->close();
-                
-                $shift_end = strtotime($today . ' ' . $shift['end_time']);
-                $check_out_time = strtotime($current_time);
-                $early_minutes = max(0, floor(($shift_end - $check_out_time) / 60));
-                
-                // Calculate work minutes
-                $check_in = strtotime($attendance['check_in_time']);
-                $work_minutes = max(0, floor(($check_out_time - $check_in) / 60));
-                
-                $updateStmt = $conn->prepare("UPDATE attendance_records SET check_out_time = ?, check_out_ip = ?, early_minutes = ?, work_minutes = ? WHERE id = ?");
-                $updateStmt->bind_param("ssiii", $current_time, $ip_address, $early_minutes, $work_minutes, $attendance['id']);
-                $updateStmt->execute();
-                $updateStmt->close();
-                
-                $message = 'Check-out successful!';
-                $message_type = 'success';
-            }
-        }
-    }
-    
-    $conn->close();
-}
 
 // Get today's attendance record
 $conn = getDBConnection();
@@ -163,13 +62,6 @@ include 'includes/head.php';
                 </div>
             </div>
 
-            <?php if ($message): ?>
-                <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
-                    <i class="bi bi-<?php echo $message_type === 'success' ? 'check-circle' : ($message_type === 'warning' ? 'exclamation-triangle' : 'x-circle'); ?>"></i>
-                    <?php echo htmlspecialchars($message); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            <?php endif; ?>
 
             <div class="row">
                 <!-- Check In/Out Section -->
@@ -215,12 +107,9 @@ include 'includes/head.php';
                                 </div>
                                 
                                 <?php if (!$today_attendance || !$today_attendance['check_in_time']): ?>
-                                    <form method="POST">
-                                        <input type="hidden" name="action" value="check_in">
-                                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
-                                            <i class="bi bi-box-arrow-in-right me-2"></i>Check In Now
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-primary btn-lg w-100 py-3" id="checkInBtn" onclick="checkIn()">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Check In Now
+                                    </button>
                                 <?php else: ?>
                                     <div class="p-3 rounded d-flex align-items-center justify-content-between" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
                                         <div class="d-flex align-items-center">
@@ -267,12 +156,9 @@ include 'includes/head.php';
                                 </div>
                                 
                                 <?php if ($today_attendance && $today_attendance['check_in_time'] && !$today_attendance['check_out_time']): ?>
-                                    <form method="POST">
-                                        <input type="hidden" name="action" value="check_out">
-                                        <button type="submit" class="btn btn-danger btn-lg w-100 py-3">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Check Out Now
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-danger btn-lg w-100 py-3" id="checkOutBtn" onclick="checkOut()">
+                                        <i class="bi bi-box-arrow-right me-2"></i>Check Out Now
+                                    </button>
                                 <?php elseif ($today_attendance && $today_attendance['check_out_time']): ?>
                                     <div class="p-3 rounded d-flex align-items-center justify-content-between" style="background-color: var(--bg-primary); border: 1px solid var(--border-color);">
                                         <div class="d-flex align-items-center">

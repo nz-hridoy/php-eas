@@ -72,43 +72,60 @@ include 'includes/head.php';
                             <h1 class="h3 mb-0">My Attendance</h1>
                             <p class="text-muted">Monthly attendance records</p>
                         </div>
-                        <form method="GET" class="d-flex gap-2">
-                            <input type="month" name="month" class="form-control" value="<?php echo htmlspecialchars($current_month); ?>" onchange="this.form.submit()">
-                        </form>
+                        <div class="d-flex align-items-center gap-2">
+                            <form method="GET" class="d-inline">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar-month"></i></span>
+                                    <input type="month" name="month" class="form-control" value="<?php echo htmlspecialchars($current_month); ?>" onchange="this.form.submit()">
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Statistics Cards -->
-            <div class="row mb-4">
+            <div class="row mb-4 g-3">
                 <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="card-title text-muted">Total Days</h5>
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="bi bi-calendar-check fs-1 text-muted"></i>
+                            </div>
+                            <h5 class="text-muted mb-1 small">Total Days</h5>
                             <h2 class="mb-0"><?php echo $total_days; ?></h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="card-title text-success">Present</h5>
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="bi bi-check-circle fs-1 text-success"></i>
+                            </div>
+                            <h5 class="text-success mb-1 small">Present</h5>
                             <h2 class="mb-0 text-success"><?php echo $present_days; ?></h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="card-title text-warning">Late</h5>
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="bi bi-clock-history fs-1 text-warning"></i>
+                            </div>
+                            <h5 class="text-warning mb-1 small">Late</h5>
                             <h2 class="mb-0 text-warning"><?php echo $late_days; ?></h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="card-title text-danger">Absent</h5>
+                    <div class="card shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="bi bi-x-circle fs-1 text-danger"></i>
+                            </div>
+                            <h5 class="text-danger mb-1 small">Absent</h5>
                             <h2 class="mb-0 text-danger"><?php echo $absent_days; ?></h2>
                         </div>
                     </div>
@@ -116,7 +133,7 @@ include 'includes/head.php';
             </div>
 
             <!-- Attendance Table -->
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover">

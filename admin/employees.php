@@ -62,7 +62,7 @@ include 'includes/head.php';
                                     <th>Shift</th>
                                     <th>Role</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -80,7 +80,7 @@ include 'includes/head.php';
                                             <td><?php echo htmlspecialchars($emp['shift_name'] ?? 'N/A'); ?></td>
                                             <td><span class="badge bg-info"><?php echo ucfirst($emp['role']); ?></span></td>
                                             <td><span class="badge bg-<?php echo $emp['status'] === 'active' ? 'success' : 'secondary'; ?>"><?php echo ucfirst($emp['status']); ?></span></td>
-                                            <td>
+                                            <td class="text-end">
                                                 <button type="button" class="btn btn-sm btn-primary" onclick="editEmployee(<?php echo htmlspecialchars(json_encode($emp)); ?>)">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>

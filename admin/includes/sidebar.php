@@ -53,6 +53,9 @@
         <a href="settings.php" class="sidebar-menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''; ?>">
             <i class="bi bi-gear"></i> Settings
         </a>
+        <a href="audit-logs.php" class="sidebar-menu-item <?php echo basename($_SERVER['PHP_SELF']) == 'audit-logs.php' ? 'active' : ''; ?>">
+            <i class="bi bi-journal-text"></i> Audit Logs
+        </a>
     </nav>
 </aside>
 
